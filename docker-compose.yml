@@ -29,11 +29,15 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://admin:adminpassword@db:5432/attendance_db
-      - SECRET_KEY=supersecretkey_change_in_production
+      - SECRET_KEY=supersecretkey_change_in_production_please
+      - ALGORITHM=HS256
     depends_on:
       db:
         condition: service_healthy
-    # Uncomment to enable live reloading during dev
+    volumes:
+      # Mount model files
+      - ./backend/yolov8n.pt:/app/yolov8n.pt:ro
+    # Uncomment for development
     # volumes:
     #   - ./backend:/app
 
@@ -44,12 +48,44 @@ services:
     container_name: attendance_frontend
     restart: always
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - backend
     environment:
-      - VITE_API_URL=http://localhost:8000
-    # For a dev setup, you would map volumes instead and command npm run dev here
+      - VITE_API_URL=http://localhost:8000/api/v1
+
+  # Development services (uncomment for development)
+  # backend-dev:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile.dev
+  #   container_name: attendance_backend_dev
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://admin:adminpassword@db:5432/attendance_db
+  #     - SECRET_KEY=dev_secret_key
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./backend:/app
+  #     - ./backend/yolov8n.pt:/app/yolov8n.pt:ro
+  #   command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+  # frontend-dev:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile.dev
+  #   container_name: attendance_frontend_dev
+  #   ports:
+  #     - "5173:5173"
+  #   environment:
+  #     - VITE_API_URL=http://localhost:8000/api/v1
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   command: npm run dev -- --host 0.0.0.0
 
 volumes:
   postgres_data:

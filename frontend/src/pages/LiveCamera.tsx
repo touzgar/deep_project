@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Play, StopCircle, RotateCcw, AlertTriangle } from 'lucide-react';
 import api from '../services/api';
 
@@ -18,7 +18,7 @@ export default function LiveCamera() {
 
   // Set up frame capture interval
   useEffect(() => {
-    let captureInterval: NodeJS.Timeout;
+    let captureInterval: number;
     
     if (isCapturing) {
       captureInterval = setInterval(() => {

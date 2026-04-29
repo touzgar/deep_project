@@ -2,28 +2,55 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard as LayoutIcon, Users as UsersIcon, UserCheck as UserCheckIcon, Settings as SettingsIcon, BookOpen, Clock, Camera, FileText } from 'lucide-react';
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useAuth } from '../contexts/AuthContext';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutIcon },
-  { name: 'Students', href: '/students', icon: UsersIcon },
-  { name: 'Classes', href: '/classes', icon: BookOpen },
-  { name: 'Sessions', href: '/sessions', icon: Clock },
-  { name: 'Live Camera', href: '/live-camera', icon: Camera },
-  { name: 'Attendance', href: '/attendance', icon: UserCheckIcon },
-  { name: 'Reports', href: '/reports', icon: FileText },
-  { name: 'Settings', href: '/settings', icon: SettingsIcon },
+// Define navigation items with role-based access
+const allNavigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutIcon, roles: ['admin', 'teacher'] },
+  { name: 'Students', href: '/students', icon: UsersIcon, roles: ['admin', 'teacher'] },
+  { name: 'Classes', href: '/classes', icon: BookOpen, roles: ['admin', 'teacher'] },
+  { name: 'Sessions', href: '/sessions', icon: Clock, roles: ['admin', 'teacher'] },
+  { name: 'Live Camera', href: '/live-camera', icon: Camera, roles: ['admin', 'teacher'] },
+  { name: 'Attendance', href: '/attendance', icon: UserCheckIcon, roles: ['admin', 'teacher'] },
+  { name: 'Reports', href: '/reports', icon: FileText, roles: ['admin', 'teacher'] },
+  { name: 'Settings', href: '/settings', icon: SettingsIcon, roles: ['admin', 'teacher'] }, // Both can access
 ];
 
 export default function Sidebar() {
+  const { user } = useAuth();
+
+  // Filter navigation based on user role
+  const navigation = allNavigation.filter(item => 
+    user && item.roles.includes(user.role)
+  );
+
   return (
     <div className="flex flex-col w-64 bg-white border-r">
       <div className="flex items-center justify-center h-16 border-b px-4">
         <h1 className="text-xl font-bold text-gray-900 truncate">Smart Face System</h1>
       </div>
+      
+      {/* User Role Badge */}
+      {user && (
+        <div className="px-5 py-3 border-b bg-gray-50">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-bold">
+                {user.username.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">{user.username}</p>
+              <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-y-auto overflow-x-hidden flex-grow">
         <ul className="flex flex-col py-4 space-y-1">
           {navigation.map((item) => (

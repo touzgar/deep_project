@@ -11,7 +11,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
     
+    # UploadThing Configuration
+    uploadthing_token: str = ""
+    uploadthing_app_id: str = ""
+    uploadthing_secret: str = ""
+    
     class Config:
         env_file = ".env"
+        extra = "allow"
 
 settings = Settings()

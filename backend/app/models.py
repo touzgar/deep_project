@@ -5,7 +5,7 @@ from app.core.database import Base
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
@@ -15,7 +15,7 @@ class User(Base):
 
 class Class(Base):
     __tablename__ = "classes"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -25,7 +25,8 @@ class Class(Base):
 
 class Student(Base):
     __tablename__ = "students"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    student_id = Column(String, unique=True, index=True, nullable=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -39,9 +40,10 @@ class Student(Base):
 
 class FaceImage(Base):
     __tablename__ = "face_images"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
     image_path = Column(String, nullable=False)
+    uploadthing_key = Column(String, nullable=True)
     embedding_vector = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -49,7 +51,7 @@ class FaceImage(Base):
 
 class Session(Base):
     __tablename__ = "sessions"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     class_id = Column(Integer, ForeignKey("classes.id", ondelete="CASCADE"), nullable=False)
     teacher_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     title = Column(String, nullable=False)
@@ -64,7 +66,7 @@ class Session(Base):
 
 class AttendanceLog(Base):
     __tablename__ = "attendance_logs"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     session_id = Column(Integer, ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False)
     student_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
     status = Column(String, default="Present")
@@ -73,4 +75,3 @@ class AttendanceLog(Base):
 
     session = relationship("Session", back_populates="attendance_logs")
     student = relationship("Student", back_populates="attendance_logs")
-

@@ -32,5 +32,4 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 @router.get("/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: models.User = Depends(deps.get_current_user)):
     return current_user
-    return current_user
 

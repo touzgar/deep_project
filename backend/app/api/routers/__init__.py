@@ -1,1 +1,1 @@
-from app.api.routers import auth, students, classes, attendance, stats
+from app.api.routers import auth, students, classes, attendance, stats, sessions, ai, reports

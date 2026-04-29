@@ -8,13 +8,23 @@ sqlalchemy==2.0.36
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.9
+alembic==1.13.1
+
+# File handling
+aiofiles
+requests
+
+# AI/ML Dependencies
 ultralytics
 opencv-python
 facenet-pytorch
-umpy
+numpy
 torch
 torchvision
+pillow
+scikit-learn
 
+# Export Dependencies
 pandas
 openpyxl
 fpdf2

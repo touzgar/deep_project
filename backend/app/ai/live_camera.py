@@ -11,20 +11,20 @@ face_ai = SmartFaceRecognizer(threshold=0.65) # Adjusted for cosine distance tol
 
 def fetch_known_faces(db):
     """
-    Fetches the latest face 128-d embeddings from PostgreSQL and constructs a live memory map.
+    Fetches the latest face embeddings from PostgreSQL and constructs a live memory map.
     Returns: {"student_id": [embedding values], ...}
     """
     known_db = {}
-    # Retrieve all primary generated face encodings
-    face_data = db.query(models.FaceImage).filter(models.FaceImage.encoding_data != None).all()
+    # Retrieve all face embeddings
+    face_data = db.query(models.FaceImage).filter(models.FaceImage.embedding_vector != None).all()
     
     for face in face_data:
-        student = face.student.student_id
+        student = face.student.student_id if face.student.student_id else str(face.student.id)
         if student not in known_db:
             known_db[student] = []
-        # PostgreSQL JSON -> Python Array
+        # Get embedding vector (already a list from JSON column)
         try:
-            emb = json.loads(face.encoding_data)
+            emb = face.embedding_vector
             if isinstance(emb, str):
                 emb = json.loads(emb)
             known_db[student].append(emb)
@@ -40,15 +40,22 @@ def get_or_create_active_session(db):
     session = db.query(models.Session).filter(models.Session.status == "active").first()
     if not session:
         # Check if we have a generic class
-        db_class = db.query(models.ClassSession).first()
+        db_class = db.query(models.Class).first()
         if not db_class:
-            db_class = models.ClassSession(course_code="GEN101", course_name="General Attendance")
+            db_class = models.Class(name="General Attendance", description="Default class for attendance")
             db.add(db_class)
             db.commit()
             db.refresh(db_class)
+        
+        # Get first teacher user
+        teacher = db.query(models.User).filter(models.User.role.in_(["admin", "teacher"])).first()
+        if not teacher:
+            raise Exception("No teacher/admin user found. Please create a user first.")
             
         session = models.Session(
             class_id=db_class.id,
+            teacher_id=teacher.id,
+            title="Live Camera Session",
             start_time=datetime.utcnow(),
             end_time=datetime.utcnow() + timedelta(hours=8),
             status="active"
@@ -64,13 +71,20 @@ def log_recent_attendance(db, student_str_id, session_id, match_accuracy, confid
     """
     student = db.query(models.Student).filter(models.Student.student_id == student_str_id).first()
     if not student:
+        # Try by ID if student_id is numeric
+        try:
+            student = db.query(models.Student).filter(models.Student.id == int(student_str_id)).first()
+        except:
+            pass
+    
+    if not student:
         return False
         
     five_mins_ago = datetime.utcnow() - timedelta(minutes=5)
     recent_log = db.query(models.AttendanceLog).filter(
         models.AttendanceLog.student_id == student.id,
         models.AttendanceLog.session_id == session_id,
-        models.AttendanceLog.timestamp >= five_mins_ago
+        models.AttendanceLog.check_in_time >= five_mins_ago
     ).first()
     
     if not recent_log:
@@ -78,8 +92,7 @@ def log_recent_attendance(db, student_str_id, session_id, match_accuracy, confid
             student_id=student.id,
             session_id=session_id,
             status="Present",
-            match_accuracy=float(match_accuracy),
-            confidence_score=float(confidence_score)
+            confidence=float(match_accuracy)
         )
         db.add(new_log)
         db.commit()
