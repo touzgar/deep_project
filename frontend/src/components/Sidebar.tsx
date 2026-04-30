@@ -17,7 +17,7 @@ const allNavigation = [
   { name: 'Live Camera', href: '/live-camera', icon: Camera, roles: ['admin', 'teacher'] },
   { name: 'Attendance', href: '/attendance', icon: UserCheckIcon, roles: ['admin', 'teacher'] },
   { name: 'Reports', href: '/reports', icon: FileText, roles: ['admin', 'teacher'] },
-  { name: 'Settings', href: '/settings', icon: SettingsIcon, roles: ['admin', 'teacher'] }, // Both can access
+  { name: 'Profile', href: '/settings', icon: SettingsIcon, roles: ['admin', 'teacher'] }, // Both can access
 ];
 
 export default function Sidebar() {

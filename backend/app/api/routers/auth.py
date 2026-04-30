@@ -33,3 +33,12 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
 def read_users_me(current_user: models.User = Depends(deps.get_current_user)):
     return current_user
 
+@router.get("/users", response_model=list[schemas.UserResponse])
+def read_users(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(deps.get_current_admin_user)
+):
+    """Get all users (admin only) - for assigning teachers to classes"""
+    users = db.query(models.User).all()
+    return users
+

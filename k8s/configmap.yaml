@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: attendance-config
+  namespace: attendance-system
+data:
+  ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "10080"
+  PROJECT_NAME: "Smart Face Attendance System"
+  # Will be updated after deployment with LoadBalancer IP
+  VITE_API_URL: "http://LOADBALANCER_IP:8000/api/v1"

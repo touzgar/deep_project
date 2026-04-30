@@ -18,10 +18,12 @@ class Class(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(String, nullable=True)
+    teacher_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     students = relationship("Student", back_populates="assigned_class")
     sessions = relationship("Session", back_populates="associated_class")
+    teacher = relationship("User", foreign_keys=[teacher_id])
 
 class Student(Base):
     __tablename__ = "students"

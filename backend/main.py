@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+import os
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.api.routers import auth, students, attendance, classes, stats, sessions, ai, reports
@@ -8,16 +9,15 @@ from app.api import deps
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Backend API for Smart Face Attendance System",
-    version="1.0.0"
+    version=settings.VERSION
 )
 
 # CORS Configuration - MUST be added before routes
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
+    allow_origins=settings.BACKEND_CORS_ORIGINS + [
+        os.getenv("FRONTEND_URL", ""),
+        os.getenv("PRODUCTION_URL", ""),
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
@@ -39,12 +39,3 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["reports"], d
 def root():
     return {"message": "Welcome to Smart Face Attendance System API"}
 
-@app.get("/test-cors")
-def test_cors():
-    return {"status": "CORS is working!", "origin_allowed": "http://localhost:5173"}
-
-# Debug: Print registered routes
-print(f"Total routes registered: {len(app.routes)}")
-for route in app.routes:
-    if hasattr(route, 'path'):
-        print(f"  - {route.path}")

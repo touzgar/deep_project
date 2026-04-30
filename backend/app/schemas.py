@@ -45,10 +45,15 @@ class StudentResponse(BaseModel):
 class ClassCreate(BaseModel):
     name: str
     description: Optional[str] = None
+    teacher_id: Optional[int] = None
 
-class ClassResponse(ClassCreate):
+class ClassResponse(BaseModel):
     id: int
+    name: str
+    description: Optional[str] = None
+    teacher_id: Optional[int] = None
     created_at: datetime
+    teacher_name: Optional[str] = None  # For displaying teacher name
     class Config:
         from_attributes = True
 

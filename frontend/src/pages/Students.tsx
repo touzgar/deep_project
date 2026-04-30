@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Camera, Upload, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Camera, Upload, X, Users, BookOpen } from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Student {
   id: number;
@@ -26,6 +27,9 @@ interface FaceImage {
 }
 
 export default function Students() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
@@ -246,66 +250,154 @@ export default function Students() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Students Management</h1>
-        <button 
-          onClick={() => openModal()} 
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700"
-        >
-          <Plus className="w-4 h-4" /> Add Student
-        </button>
+      {/* Modern Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl shadow-xl p-8 text-white">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">
+              {isAdmin ? '👥 Students Management' : '👥 My Students'}
+            </h1>
+            <p className="text-blue-100">
+              {isAdmin 
+                ? 'Manage all students in the system' 
+                : 'View and manage photos for students in your classes'}
+            </p>
+          </div>
+          {isAdmin && (
+            <button 
+              onClick={() => openModal()} 
+              className="bg-white text-indigo-600 px-6 py-3 rounded-xl flex items-center gap-2 hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg font-semibold"
+            >
+              <Plus className="w-5 h-5" /> Add Student
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Face Images</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {students.map((student) => (
-              <tr key={student.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {student.first_name} {student.last_name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {student.email}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {student.class_name || `Class ${student.class_id}`}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <button
-                    onClick={() => openPhotoModal(student)}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium hover:bg-blue-200 flex items-center gap-1"
-                  >
-                    <Camera className="w-3 h-3" />
-                    Manage Photos
-                  </button>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <button 
-                    onClick={() => openModal(student)}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(student.id)}
-                    className="text-red-600 hover:text-red-900"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 font-medium">Total Students</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{students.length}</p>
+            </div>
+            <div className="bg-blue-100 p-4 rounded-xl">
+              <Users className="w-8 h-8 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 font-medium">With Face Data</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">
+                {students.filter(s => s.id).length}
+              </p>
+            </div>
+            <div className="bg-green-100 p-4 rounded-xl">
+              <Camera className="w-8 h-8 text-green-600" />
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 font-medium">Total Classes</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{classes.length}</p>
+            </div>
+            <div className="bg-purple-100 p-4 rounded-xl">
+              <BookOpen className="w-8 h-8 text-purple-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Students Grid/Table */}
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-gray-800">Student Directory</h2>
+        </div>
+        
+        {students.length === 0 ? (
+          <div className="text-center py-16">
+            <Users className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-lg font-medium">No students yet</p>
+            <p className="text-gray-400 text-sm mt-2">Add your first student to get started</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Student</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Class</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Face Images</th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {students.map((student) => (
+                  <tr key={student.id} className="hover:bg-blue-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-12 w-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                          {student.first_name.charAt(0)}{student.last_name.charAt(0)}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-bold text-gray-900">
+                            {student.first_name} {student.last_name}
+                          </div>
+                          {student.student_id && (
+                            <div className="text-xs text-gray-500">ID: {student.student_id}</div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{student.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                        {student.class_name || `Class ${student.class_id}`}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => openPhotoModal(student)}
+                        className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-semibold hover:from-blue-600 hover:to-indigo-600 flex items-center gap-2 transition-all transform hover:scale-105 shadow-md"
+                      >
+                        <Camera className="w-4 h-4" />
+                        Manage Photos
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {isAdmin && (
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={() => openModal(student)}
+                            className="text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 p-2 rounded-lg transition-all"
+                            title="Edit Student"
+                          >
+                            <Edit2 className="w-5 h-5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(student.id)}
+                            className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-lg transition-all"
+                            title="Delete Student"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Student Form Modal */}

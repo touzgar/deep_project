@@ -8,7 +8,7 @@ from pathlib import Path
 import shutil
 
 from app.core.database import get_db
-from app.api.deps import get_current_teacher_user
+from app.api.deps import get_current_teacher_user, get_current_admin_user
 from app import crud, models, schemas
 from app.ai.face_attendance import get_face_ai
 from app.services.uploadthing import get_uploadthing_service
@@ -33,26 +33,82 @@ class UploadPhotosResponse(BaseModel):
     face_images: List[dict] = []
     errors: List[str] = []
 
+# Teachers see only their students, Admins see all
 @router.get("/", response_model=list[schemas.StudentResponse])
-def read_students(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return crud.get_students(db, skip=skip, limit=limit)
+def read_students(
+    skip: int = 0, 
+    limit: int = 100, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_teacher_user)
+):
+    if current_user.role == "admin":
+        # Admin sees all students
+        return crud.get_students(db, skip=skip, limit=limit)
+    else:
+        # Teacher sees only students from their assigned classes
+        teacher_class_ids = db.query(models.Class.id).filter(
+            models.Class.teacher_id == current_user.id
+        ).all()
+        
+        class_ids = [cid[0] for cid in teacher_class_ids]
+        
+        if not class_ids:
+            return []
+        
+        # Get students from those classes
+        students = db.query(models.Student).filter(
+            models.Student.class_id.in_(class_ids)
+        ).offset(skip).limit(limit).all()
+        
+        # Format response
+        result = []
+        for student in students:
+            student_dict = {
+                "id": student.id,
+                "student_id": student.student_id,
+                "first_name": student.first_name,
+                "last_name": student.last_name,
+                "email": student.email,
+                "class_id": student.class_id,
+                "photo_path": student.photo_path,
+                "created_at": student.created_at,
+                "class_name": student.assigned_class.name if student.assigned_class else None
+            }
+            result.append(student_dict)
+        return result
 
+# Only ADMIN can create students
 @router.post("/", response_model=schemas.StudentResponse, status_code=status.HTTP_201_CREATED)
-def create_student(student: schemas.StudentCreate, db: Session = Depends(get_db)):
+def create_student(
+    student: schemas.StudentCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin_user)
+):
     db_student = crud.get_student_by_email(db, email=student.email)
     if db_student:
         raise HTTPException(status_code=400, detail="Student email already registered")
     return crud.create_student(db=db, student=student)
 
+# Only ADMIN can update students
 @router.put("/{student_id}", response_model=schemas.StudentResponse)
-def update_student(student_id: int, student: schemas.StudentCreate, db: Session = Depends(get_db)):
+def update_student(
+    student_id: int, 
+    student: schemas.StudentCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin_user)
+):
     db_student = crud.update_student(db, student_id, student)
     if not db_student:
         raise HTTPException(status_code=404, detail="Student not found")
     return db_student
 
+# Only ADMIN can delete students
 @router.delete("/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_student(student_id: int, db: Session = Depends(get_db)):
+def delete_student(
+    student_id: int, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_admin_user)
+):
     db_student = crud.delete_student(db, student_id)
     if not db_student:
         raise HTTPException(status_code=404, detail="Student not found")

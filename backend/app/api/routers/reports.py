@@ -402,8 +402,8 @@ async def export_attendance_pdf(
         
         # Generate PDF in memory
         pdf_output = io.BytesIO()
-        pdf_string = pdf.output(dest='S').encode('latin1')
-        pdf_output.write(pdf_string)
+        pdf_bytes = pdf.output()
+        pdf_output.write(pdf_bytes)
         pdf_output.seek(0)
         
         # Generate filename with timestamp

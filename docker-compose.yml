@@ -1,23 +1,20 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: attendance_db
-    restart: always
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adminpassword
-      POSTGRES_DB: attendance_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d attendance_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # Using Neon PostgreSQL - no local database needed
+  # Uncomment below if you want local database for development
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: attendance_db
+  #   restart: always
+  #   environment:
+  #     POSTGRES_USER: admin
+  #     POSTGRES_PASSWORD: adminpassword
+  #     POSTGRES_DB: attendance_db
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
   backend:
     build:
@@ -28,18 +25,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://admin:adminpassword@db:5432/attendance_db
-      - SECRET_KEY=supersecretkey_change_in_production_please
+      - DATABASE_URL=postgresql://neondb_owner:npg_hMtrjxz9qA5C@ep-green-pine-anw2pzja-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - SECRET_KEY=67aa5288c88bf4499d778514fc114d79e9dfda01dac601cb15cd88f9194e78de
       - ALGORITHM=HS256
-    depends_on:
-      db:
-        condition: service_healthy
     volumes:
-      # Mount model files
       - ./backend/yolov8n.pt:/app/yolov8n.pt:ro
-    # Uncomment for development
-    # volumes:
-    #   - ./backend:/app
+      - ./backend/uploads:/app/uploads
 
   frontend:
     build:
@@ -48,44 +39,45 @@ services:
     container_name: attendance_frontend
     restart: always
     ports:
-      - "3000:80"
+      - "8080:80"
     depends_on:
       - backend
     environment:
       - VITE_API_URL=http://localhost:8000/api/v1
 
-  # Development services (uncomment for development)
-  # backend-dev:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile.dev
-  #   container_name: attendance_backend_dev
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     - DATABASE_URL=postgresql://admin:adminpassword@db:5432/attendance_db
-  #     - SECRET_KEY=dev_secret_key
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
-  #   volumes:
-  #     - ./backend:/app
-  #     - ./backend/yolov8n.pt:/app/yolov8n.pt:ro
-  #   command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+  # Development services
+  backend-dev:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: attendance_backend_dev
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://neondb_owner:npg_hMtrjxz9qA5C@ep-green-pine-anw2pzja-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - SECRET_KEY=67aa5288c88bf4499d778514fc114d79e9dfda01dac601cb15cd88f9194e78de
+    volumes:
+      - ./backend:/app
+      - ./backend/yolov8n.pt:/app/yolov8n.pt:ro
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    profiles:
+      - dev
 
-  # frontend-dev:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile.dev
-  #   container_name: attendance_frontend_dev
-  #   ports:
-  #     - "5173:5173"
-  #   environment:
-  #     - VITE_API_URL=http://localhost:8000/api/v1
-  #   volumes:
-  #     - ./frontend:/app
-  #     - /app/node_modules
-  #   command: npm run dev -- --host 0.0.0.0
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: attendance_frontend_dev
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    profiles:
+      - dev
 
-volumes:
-  postgres_data:
+# volumes:
+#   postgres_data:

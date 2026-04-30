@@ -74,7 +74,20 @@ def delete_student(db: Session, student_id: int):
 
 # CLASSES
 def get_classes(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Class).offset(skip).limit(limit).all()
+    classes = db.query(models.Class).offset(skip).limit(limit).all()
+    # Add teacher name to each class
+    result = []
+    for cls in classes:
+        class_dict = {
+            "id": cls.id,
+            "name": cls.name,
+            "description": cls.description,
+            "teacher_id": cls.teacher_id,
+            "created_at": cls.created_at,
+            "teacher_name": cls.teacher.username if cls.teacher else None
+        }
+        result.append(class_dict)
+    return result
 
 def get_class(db: Session, class_id: int):
     return db.query(models.Class).filter(models.Class.id == class_id).first()
