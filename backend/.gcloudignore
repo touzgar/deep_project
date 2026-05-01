@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Uploads (if you don't want to include uploaded files)
+uploads/
+
+# Model files (if very large and not needed for build)
+# *.pt
+# *.h5
+# *.pkl
+
+# Alembic
+alembic.ini
+
+# Documentation
+*.md
+README*
+docs/
+
+# Tests
+tests/
+*.test.py
+test_*.py
+
+# Build artifacts
+dist/
+build/
+*.egg-info/

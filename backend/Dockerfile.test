@@ -1,0 +1,46 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies for OpenCV, ML libraries, and testing
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libgomp1 \
+    build-essential \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+COPY requirements-test.txt .
+
+# Install Python dependencies (including test dependencies)
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-test.txt
+
+# Download YOLO model if not present
+RUN if [ ! -f yolov8n.pt ]; then \
+    wget -O yolov8n.pt https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt; \
+    fi
+
+# Copy application code
+COPY . .
+
+# Create directories
+RUN mkdir -p uploads logs tests
+
+# Set environment variables for testing
+ENV ENVIRONMENT=test
+ENV PYTHONPATH=/app
+ENV PYTEST_ADDOPTS="--color=yes --verbose"
+
+# Expose port for test API
+EXPOSE 8000
+
+# Default command runs tests
+CMD ["pytest", "-v", "--cov=app", "--cov-report=html", "--cov-report=term"]

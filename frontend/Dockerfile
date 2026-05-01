@@ -3,12 +3,18 @@ FROM node:18-alpine as build
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies (including devDependencies needed for build)
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
+
+# Copy source files
+COPY . .
+
+# Set API URL for build (can be overridden with --build-arg)
+ARG VITE_API_URL=http://localhost:8000/api/v1
+ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application
-COPY . .
 RUN npm run build
 
 # Production stage

@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: gcr.io/even-blueprint-495003-t1/attendance-frontend:latest
-        imagePullPolicy: Always
+        image: deep_project-frontend:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
         env:

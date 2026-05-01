@@ -16,8 +16,8 @@ spec:
       containers:
       - name: backend
         # Using Neon PostgreSQL - no need for local postgres
-        image: gcr.io/even-blueprint-495003-t1/attendance-backend:latest
-        imagePullPolicy: Always
+        image: deep_project-backend:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000
         env:

@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: attendance-ingress
+  namespace: attendance-system
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # SSL disabled - using HTTP only (no domain)
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+  # Frontend - accessible via LoadBalancer IP
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+  # Backend API - accessible via LoadBalancer IP/api
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: backend-service
+            port:
+              number: 8000

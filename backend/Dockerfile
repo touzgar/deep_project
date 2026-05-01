@@ -4,15 +4,15 @@ WORKDIR /app
 
 # Install system dependencies for OpenCV, ML libraries, and compilers
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender1 \
     libgomp1 \
-    libgcc-s1 \
     build-essential \
     wget \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies

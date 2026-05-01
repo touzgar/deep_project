@@ -36,14 +36,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8000/api/v1
     container_name: attendance_frontend
     restart: always
     ports:
-      - "8080:80"
+      - "5173:80"
     depends_on:
       - backend
-    environment:
-      - VITE_API_URL=http://localhost:8000/api/v1
 
   # Development services
   backend-dev:
@@ -69,7 +69,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: attendance_frontend_dev
     ports:
-      - "5173:5173"
+      - "5174:5173"
     environment:
       - VITE_API_URL=http://localhost:8000/api/v1
     volumes:
@@ -78,6 +78,38 @@ services:
     command: npm run dev -- --host 0.0.0.0
     profiles:
       - dev
+
+  # Test services
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: attendance_backend_test
+    environment:
+      - DATABASE_URL=postgresql://neondb_owner:npg_hMtrjxz9qA5C@ep-green-pine-anw2pzja-pooler.c-6.us-east-1.aws.neon.tech/neondb?sslmode=require
+      - SECRET_KEY=test-secret-key-for-testing-only
+      - ENVIRONMENT=test
+    volumes:
+      - ./backend:/app
+      - ./backend/test-results:/app/htmlcov
+    command: pytest -v --cov=app --cov-report=html --cov-report=term
+    profiles:
+      - test
+
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    container_name: attendance_frontend_test
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm run test
+    profiles:
+      - test
 
 # volumes:
 #   postgres_data:
