@@ -16,3 +16,4 @@ build/
 *.onnx
 *.mp4
 *.avi
+minikube-linux-amd64
